@@ -129,6 +129,19 @@ web_server/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/web_server.dir/build.make CMakeFiles/web_server.dir/build
 .PHONY : web_server/fast
 
+#=============================================================================
+# Target rules for targets named test_client
+
+# Build rule for target.
+test_client: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_client
+.PHONY : test_client
+
+# fast build rule for target.
+test_client/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_client.dir/build.make CMakeFiles/test_client.dir/build
+.PHONY : test_client/fast
+
 src/main.o: src/main.cpp.o
 .PHONY : src/main.o
 
@@ -153,6 +166,30 @@ src/main.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/web_server.dir/build.make CMakeFiles/web_server.dir/src/main.cpp.s
 .PHONY : src/main.cpp.s
 
+src/test_client.o: src/test_client.cpp.o
+.PHONY : src/test_client.o
+
+# target to build an object file
+src/test_client.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_client.dir/build.make CMakeFiles/test_client.dir/src/test_client.cpp.o
+.PHONY : src/test_client.cpp.o
+
+src/test_client.i: src/test_client.cpp.i
+.PHONY : src/test_client.i
+
+# target to preprocess a source file
+src/test_client.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_client.dir/build.make CMakeFiles/test_client.dir/src/test_client.cpp.i
+.PHONY : src/test_client.cpp.i
+
+src/test_client.s: src/test_client.cpp.s
+.PHONY : src/test_client.s
+
+# target to generate assembly for a file
+src/test_client.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_client.dir/build.make CMakeFiles/test_client.dir/src/test_client.cpp.s
+.PHONY : src/test_client.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -161,10 +198,14 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
+	@echo "... test_client"
 	@echo "... web_server"
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"
+	@echo "... src/test_client.o"
+	@echo "... src/test_client.i"
+	@echo "... src/test_client.s"
 .PHONY : help
 
 
