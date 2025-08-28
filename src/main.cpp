@@ -4,6 +4,7 @@
 #include <vector>
 #include <atomic>
 #include <csignal>
+#include <sstream>
 
 #ifdef _WIN32
     #include <winsock2.h>
@@ -26,6 +27,91 @@
     #define INVALID_SOCKET -1
     #define SOCKET_ERROR -1
 #endif
+
+class HTTPRequest {
+private:
+    std::string method;
+    std::string path;
+    std::string version;
+    bool isValid;
+    
+public:
+    HTTPRequest() : isValid(false) {}
+    
+    bool parse(const std::string& requestData) {
+        std::istringstream stream(requestData);
+        std::string requestLine;
+        
+        // Get the first line (request line)
+        if (!std::getline(stream, requestLine)) {
+            return false;
+        }
+        
+        // Remove carriage return if present
+        if (!requestLine.empty() && requestLine.back() == '\r') {
+            requestLine.pop_back();
+        }
+        
+        // Parse request line: METHOD PATH VERSION
+        std::istringstream lineStream(requestLine);
+        std::string token;
+        
+        // Parse method
+        if (!(lineStream >> token)) {
+            return false;
+        }
+        method = token;
+        
+        // Parse path
+        if (!(lineStream >> token)) {
+            return false;
+        }
+        path = token;
+        
+        // Parse version
+        if (!(lineStream >> token)) {
+            return false;
+        }
+        version = token;
+        
+        // Validate method (only support GET for now)
+        if (method != "GET") {
+            return false;
+        }
+        
+        // Validate version format
+        if (version.substr(0, 5) != "HTTP/") {
+            return false;
+        }
+        
+        isValid = true;
+        return true;
+    }
+    
+    std::string getMethod() const { return method; }
+    std::string getPath() const { return path; }
+    std::string getVersion() const { return version; }
+    bool getIsValid() const { return isValid; }
+    
+    std::string generateResponse() const {
+        if (!isValid) {
+            return "HTTP/1.1 400 Bad Request\r\n"
+                   "Content-Type: text/plain\r\n"
+                   "Content-Length: 25\r\n"
+                   "\r\n"
+                   "400 Bad Request";
+        }
+        
+        // Return the exact response format specified in acceptance criteria
+        std::string body = "Hello World!";
+        std::string response = "HTTP/1.1 200 OK\r\n"
+                              "Content-Type: text/plain\r\n"
+                              "Content-Length: " + std::to_string(body.length()) + "\r\n"
+                              "\r\n"
+                              + body;
+        return response;
+    }
+};
 
 class TCPServer {
 private:
@@ -89,7 +175,7 @@ public:
         }
         
         running = true;
-        std::cout << "TCP Echo Server started on port " << port << std::endl;
+        std::cout << "HTTP Server started on port " << port << std::endl;
         std::cout << "Waiting for connections..." << std::endl;
         
         return true;
@@ -168,14 +254,30 @@ private:
             // Null-terminate the received data
             buffer[bytesReceived] = '\0';
             
-            // Echo the data back to the client
-            int bytesSent = send(clientSocket, buffer, bytesReceived, 0);
+            // Parse HTTP request
+            HTTPRequest request;
+            bool parseSuccess = request.parse(buffer);
+            
+            // Generate response
+            std::string response = request.generateResponse();
+            
+            // Send response to client
+            int bytesSent = send(clientSocket, response.c_str(), response.length(), 0);
             if (bytesSent < 0) {
-                std::cerr << "Failed to send data to client. Error: " << SOCKET_ERROR_CODE << std::endl;
+                std::cerr << "Failed to send response to client. Error: " << SOCKET_ERROR_CODE << std::endl;
                 break;
             }
             
-            std::cout << "Echoed " << bytesReceived << " bytes to client" << std::endl;
+            if (parseSuccess) {
+                std::cout << "Successfully parsed HTTP request: " << request.getMethod() 
+                          << " " << request.getPath() << " " << request.getVersion() << std::endl;
+                std::cout << "Sent HTTP response: " << bytesSent << " bytes" << std::endl;
+            } else {
+                std::cout << "Failed to parse HTTP request, sent 400 response" << std::endl;
+            }
+            
+            // Close connection after sending response (HTTP/1.0 behavior)
+            break;
         }
         
         CLOSE_SOCKET(clientSocket);
@@ -191,7 +293,7 @@ void signalHandler(int signal) {
 }
 
 int main() {
-    std::cout << "TCP Echo Server starting..." << std::endl;
+    std::cout << "HTTP Server starting..." << std::endl;
     
     // Set up signal handling
     signal(SIGINT, signalHandler);
