@@ -1,19 +1,22 @@
-# TCP Echo Server
+# HTTP Web Server
 
-A multithreaded TCP echo server implemented in C++ that listens on localhost:8080 and echoes back any client input.
+A multithreaded HTTP web server implemented in C++ that listens on localhost:8080 and serves HTTP responses with request parsing capabilities.
 
 ## Features
 
+- **HTTP Request Parsing**: Parses HTTP request lines to extract method, path, and version
 - **TCP Socket Handling**: Full TCP socket implementation with proper error handling
 - **Multithreaded**: Handles multiple client connections concurrently using std::thread
 - **Cross-Platform**: Works on Windows, macOS, and Linux
 - **Signal Handling**: Graceful shutdown with Ctrl+C (SIGINT) and SIGTERM
 - **Client Management**: Automatically cleans up disconnected client threads
+- **Error Handling**: Returns proper HTTP error responses for invalid requests
 
 ## Acceptance Criteria Met
 
 **Server runs on port 8080** - Configured to listen on localhost:8080  
-**Client receives back exactly what it sends** - Full echo functionality implemented  
+**HTTP Request Parsing** - Successfully parses method, path, and version from request lines  
+**Error Handling** - Returns proper HTTP error responses for invalid requests  
 **Server can handle at least 1 client at a time** - Multithreaded design supports multiple concurrent clients  
 
 ## Building the Project
@@ -59,43 +62,48 @@ Waiting for connections...
 
 ## Testing the Server
 
-### Option 1: Using the Test Client
+### Option 1: Using the HTTP Test Script
 
 ```bash
-# In another terminal, run the test client
-./test_client
+# Run the comprehensive HTTP test script
+./test_http_parsing.sh
 ```
 
-The test client will:
-1. Connect to the server
-2. Run automated tests with various message types
-3. Enter interactive mode for manual testing
+This script will:
+1. Start the server
+2. Test valid GET requests
+3. Test invalid requests (POST, malformed, empty)
+4. Verify proper HTTP responses
+5. Stop the server and show logs
 
-### Option 2: Using Telnet
+### Option 2: Using curl
 
 ```bash
-# Connect using telnet
-telnet localhost 8080
+# Test valid GET request
+curl http://localhost:8080/index.html
 
-# Type any message and press Enter
-# The server will echo it back exactly
-# Type 'quit' or Ctrl+] then 'quit' to exit
+# Test different path
+curl http://localhost:8080/api/users
+
+# Test with verbose output
+curl -v http://localhost:8080/test
 ```
 
 ### Option 3: Using netcat (nc)
 
 ```bash
-# Connect using netcat
-nc localhost 8080
+# Test custom HTTP request
+echo -e "GET /custom HTTP/1.1\r\nHost: localhost:8080\r\n\r\n" | nc localhost 8080
 
-# Type messages and see them echoed back
-# Press Ctrl+C to disconnect
+# Test invalid request
+echo -e "POST /test HTTP/1.1\r\n\r\n" | nc localhost 8080
 ```
 
 ## Server Behavior
 
+- **HTTP Request Parsing**: Parses incoming HTTP requests to extract method, path, and version
+- **Response Generation**: Generates appropriate HTTP responses based on request validity
 - **Connection Handling**: Accepts new connections and spawns a thread for each client
-- **Echo Functionality**: Receives data from clients and sends it back exactly as received
 - **Concurrent Clients**: Can handle multiple clients simultaneously
 - **Graceful Shutdown**: Responds to SIGINT (Ctrl+C) and SIGTERM signals
 - **Resource Cleanup**: Automatically closes client connections and cleans up threads
@@ -109,8 +117,14 @@ TCPServer Class
 ├── handleClient() - Handle individual client communication
 └── stop() - Graceful shutdown and cleanup
 
+HTTPRequest Class
+├── parse() - Parse HTTP request line into method, path, and version
+├── generateResponse() - Generate appropriate HTTP response
+└── Validation methods for request components
+
 Client Handling
 ├── Each client gets its own thread
+├── HTTP request parsing and response generation
 ├── Automatic thread cleanup on disconnect
 └── Non-blocking main server loop
 ```
@@ -133,12 +147,14 @@ Client Handling
 ## Future Enhancements
 
 This implementation provides a solid foundation for:
-- HTTP protocol support
+- Additional HTTP methods (POST, PUT, DELETE)
+- HTTP header parsing and handling
 - Static file serving
 - Keep-alive connections
 - Connection pooling
 - Performance benchmarking
 - Configuration file support
+- Route handling and middleware support
 
 ## Troubleshooting
 
